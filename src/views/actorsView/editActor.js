@@ -15,6 +15,8 @@ import Slide from "@material-ui/core/Slide";
 import md5 from "md5";
 import {Strings} from "../../utils/Strings";
 
+import firebase from "../../firebase";
+
 export default class EditActor extends Component{
     constructor(props) {
         super(props);
@@ -34,7 +36,7 @@ export default class EditActor extends Component{
             accionUrl: this.strings.apiHost + this.strings.saveActor,
         };
 
-        //Convert Image to Base 64
+        //Convert Image to Base 64 (Ya no lo utilizo)
         this.getBase64 = this.getBase64.bind(this)
     }
 
@@ -71,7 +73,7 @@ export default class EditActor extends Component{
         });
     };
 
-    //Convert Image to Base 64
+    //Convert Image to Base 64 (Ya no no lo utilizo)
     getBase64(e) {
         var file = e.target.files[0];
         let reader = new FileReader();
@@ -95,6 +97,25 @@ export default class EditActor extends Component{
             openModal: false
         });
     };
+
+    
+    uploadImageToFirebase = (e) =>{
+        let file = e.target.files[0];
+        let bucketName = "img";
+        let storageRef = firebase.storage().ref(bucketName+ "/" + file.name);
+        let uploadTask = storageRef.put(file);
+        uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, {
+            'complete': () => {
+                storageRef.getDownloadURL().then((url) => {
+                    this.setState({
+                        actorImageUploaded: url
+                    })
+               })
+            }
+        });
+
+        
+    }
 
     //Validation for Edit Actor Form
     isValidActor = () => {
@@ -219,7 +240,7 @@ export default class EditActor extends Component{
                         }
                     
                         <div style = {{display: "flex", flexDirection: "row", justifyContent: "center"}}>
-                            <input accept = "image/*" style = {{display: "none"}} id = "icon-button-file" type = "file" onChange = {this.getBase64}/>
+                            <input accept = "image/*" style = {{display: "none"}} id = "icon-button-file" type = "file" onChange = {(e) => this.uploadImageToFirebase(e)}/>
                             <label htmlFor = "icon-button-file" style = {{marginLeft: "auto", marginRight: "auto"}}>
                                 Seleccione una archivo de Imagen
                                 <IconButton color = "primary" aria-label = "upload picture" component = "span" > 
